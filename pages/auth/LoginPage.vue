@@ -27,5 +27,12 @@ import EntrarComGoogleButton from '@/components/auth/EntrarComGoogleButton.vue'
         Criar conta
       </RouterLink>
     </p>
+
+    <RouterLink
+      :to="{ name: 'apresentacao' }"
+      class="text-center text-xs text-muted-foreground underline-offset-4 hover:underline"
+    >
+      Instalar o SAVi no celular
+    </RouterLink>
   </AuthLayout>
 </template>

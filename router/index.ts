@@ -6,6 +6,12 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/bem-vindo',
+      name: 'apresentacao',
+      component: () => import('@/pages/apresentacao/ApresentacaoPage.vue'),
+      meta: { publica: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/pages/auth/LoginPage.vue'),

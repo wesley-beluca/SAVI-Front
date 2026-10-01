@@ -7,6 +7,9 @@ import VueApexCharts from 'vue3-apexcharts'
 
 import App from './App.vue'
 import router from '@/router'
+import { registrarEventosInstalacao } from '@/mixins/useInstalacaoPwa'
+
+registrarEventosInstalacao()
 
 const app = createApp(App)
 
