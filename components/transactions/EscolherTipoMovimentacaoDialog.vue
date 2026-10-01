@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownRight, ArrowUpRight, ArrowLeftRight } from '@lucide/vue'
-import { toast } from 'vue-sonner'
+import { ArrowDownRight, ArrowUpRight } from '@lucide/vue'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { TipoTransacao } from '@/api/categorias.api'
 
