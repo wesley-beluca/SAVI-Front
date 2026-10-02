@@ -59,6 +59,12 @@ const router = createRouter({
           component: () => import('@/pages/categorias/CategoriasPage.vue'),
           meta: { aba: 'perfil' },
         },
+        {
+          path: 'perfil/sobre',
+          name: 'sobre',
+          component: () => import('@/pages/sobre/SobrePage.vue'),
+          meta: { aba: 'perfil' },
+        },
       ],
     },
   ],
