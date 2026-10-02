@@ -27,7 +27,6 @@ const opcoesFuturas = [
   { rotulo: 'Segurança', icone: Shield },
   { rotulo: 'Privacidade', icone: Lock },
   { rotulo: 'Ajuda', icone: Info },
-  { rotulo: 'Sobre o SAVi', icone: Sparkles },
 ]
 
 function emBreve(rotulo: string) {
@@ -105,6 +104,17 @@ function sair() {
         >
           <component :is="opcao.icone" class="size-4 text-muted-foreground" />
           <span class="flex-1 font-medium">{{ opcao.rotulo }}</span>
+          <ChevronRight class="size-4 text-muted-foreground" />
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          class="flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-muted"
+          @click="router.push({ name: 'sobre' })"
+        >
+          <Sparkles class="size-4 text-muted-foreground" />
+          <span class="flex-1 font-medium">Sobre o SAVi</span>
           <ChevronRight class="size-4 text-muted-foreground" />
         </button>
       </li>
