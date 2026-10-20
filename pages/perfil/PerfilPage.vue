@@ -7,12 +7,39 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
 import { useAuthStore } from '@/store/auth.store'
 import EditarPerfilDialog from '@/components/perfil/EditarPerfilDialog.vue'
+import {
+  DIAS_ANTECEDENCIA_LEMBRETE,
+  definirLembretesAtivos,
+  lembretesAtivos,
+  permissaoNotificacoes,
+  solicitarPermissaoNotificacoes,
+} from '@/mixins/useLembretesContas'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const editarAberto = ref(false)
-const notificacoesAtivas = ref(true)
+const lembretesLigados = ref(lembretesAtivos())
+const permissao = ref(permissaoNotificacoes())
+
+const descricaoLembretes = computed(() => {
+  if (!lembretesLigados.value) return 'Desativados'
+  if (permissao.value === 'granted') return `Avisa ${DIAS_ANTECEDENCIA_LEMBRETE} dias antes do vencimento`
+  if (permissao.value === 'denied') return 'Notificações bloqueadas no navegador. Avisos só dentro do app.'
+  if (permissao.value === 'indisponivel') return 'Avisos dentro do app. No iPhone, instale o SAVi para receber notificações.'
+  return 'Avisos dentro do app'
+})
+
+async function alternarLembretes(ligados: boolean) {
+  lembretesLigados.value = ligados
+  definirLembretesAtivos(ligados)
+  if (ligados) await pedirPermissao()
+}
+
+async function pedirPermissao() {
+  permissao.value = await solicitarPermissaoNotificacoes()
+  if (permissao.value === 'granted') toast.success('Pronto! Você será avisado quando uma conta estiver para vencer.')
+}
 
 const iniciais = computed(() => {
   const nome = authStore.usuario?.nome ?? ''
@@ -89,12 +116,21 @@ function sair() {
           <ChevronRight class="size-4 text-muted-foreground" />
         </button>
       </li>
-      <li>
-        <label class="flex w-full items-center gap-3 px-3 py-3">
-          <Bell class="size-4 text-muted-foreground" />
-          <span class="flex-1 font-medium">Notificações</span>
-          <Switch v-model="notificacoesAtivas" />
-        </label>
+      <li class="flex w-full items-center gap-3 px-3 py-3">
+        <Bell class="size-4 shrink-0 text-muted-foreground" />
+        <div class="flex flex-1 flex-col">
+          <label for="lembretes-contas" class="font-medium">Lembretes de contas</label>
+          <span class="text-xs text-muted-foreground">{{ descricaoLembretes }}</span>
+          <button
+            v-if="lembretesLigados && permissao === 'default'"
+            type="button"
+            class="self-start text-xs font-medium text-primary hover:underline"
+            @click="pedirPermissao"
+          >
+            Permitir notificações do sistema
+          </button>
+        </div>
+        <Switch id="lembretes-contas" :model-value="lembretesLigados" @update:model-value="alternarLembretes" />
       </li>
       <li v-for="opcao in opcoesFuturas" :key="opcao.rotulo">
         <button

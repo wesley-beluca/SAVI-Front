@@ -14,6 +14,7 @@ import { campoObrigatorio, useValidacaoFormulario } from '@/mixins/useValidacaoF
 import { useCriarTransacaoMutation, useAtualizarTransacaoMutation } from '@/mixins/useTransacoes'
 import { useContasQuery } from '@/mixins/useContas'
 import { useCartoesQuery } from '@/mixins/useCartoes'
+import { dataIsoLocal } from '@/utils/formatters'
 import type { Transacao } from '@/api/transacoes.api'
 import type { TipoTransacao } from '@/api/categorias.api'
 
@@ -42,10 +43,11 @@ const tipo = ref<TipoTransacao>(props.tipo)
 const valor = ref('')
 const categoriaId = ref('')
 const conta = ref('')
-const data = ref(hojeIso())
+const data = ref(dataIsoLocal())
 const descricao = ref('')
 const recorrente = ref(false)
 const mesesRecorrencia = ref('2')
+const pago = ref(true)
 
 const MAXIMO_MESES_RECORRENCIA = 120
 
@@ -73,9 +75,13 @@ const { erros, validar, resetar } = useValidacaoFormulario(() => {
   }
 })
 
-function hojeIso(): string {
-  return new Date().toISOString().slice(0, 10)
+// Sugestão: compras de hoje ou do passado já saíram da conta; despesas futuras ficam a pagar.
+// O pagamento das ocorrências seguintes (e na edição) é controlado pelos detalhes da movimentação.
+function sugerirPago() {
+  pago.value = data.value <= dataIsoLocal()
 }
+
+watch(data, sugerirPago)
 
 watch(aberto, (estaAberto) => {
   if (!estaAberto) return
@@ -85,11 +91,12 @@ watch(aberto, (estaAberto) => {
   tipo.value = props.movimentacao?.tipo ?? props.tipo
   valor.value = props.movimentacao ? String(props.movimentacao.valor) : ''
   conta.value = props.movimentacao?.conta ?? ''
-  data.value = props.movimentacao?.dataInicio ?? props.dataInicial ?? hojeIso()
+  data.value = props.movimentacao?.dataInicio ?? props.dataInicial ?? dataIsoLocal()
   descricao.value = props.movimentacao?.descricao ?? ''
   recorrente.value = props.movimentacao?.recorrente ?? false
   mesesRecorrencia.value = String(Math.max(props.movimentacao?.mesesRecorrencia ?? 2, 2))
   categoriaId.value = props.movimentacao?.categoriaId ?? ''
+  sugerirPago()
 })
 
 async function salvar() {
@@ -112,7 +119,7 @@ async function salvar() {
       await atualizarMutation.mutateAsync({ id: props.movimentacao.id, dados })
       toast.success('Movimentação atualizada.')
     } else {
-      await criarMutation.mutateAsync(dados)
+      await criarMutation.mutateAsync({ ...dados, pago: tipo.value === 'Despesa' && pago.value })
       toast.success(tipo.value === 'Despesa' ? 'Despesa salva.' : 'Receita salva.')
     }
 
@@ -240,6 +247,16 @@ async function salvar() {
             Lançado todo mês no mesmo dia, a partir da data escolhida.
           </p>
         </div>
+
+        <label v-if="tipo === 'Despesa' && !modoEdicao" for="pago" class="flex items-center justify-between gap-4">
+          <span class="flex flex-col">
+            <span class="text-sm">Já foi paga</span>
+            <span class="text-xs text-muted-foreground">
+              Só despesas pagas descontam do saldo.{{ recorrente ? ' Vale apenas para o primeiro mês.' : '' }}
+            </span>
+          </span>
+          <Switch id="pago" v-model="pago" />
+        </label>
 
         <DialogFooter>
           <Button type="submit" class="w-full" :disabled="salvando">

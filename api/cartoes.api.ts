@@ -4,7 +4,10 @@ export interface Cartao {
   id: string
   nome: string
   banco: string
+  /** Fatura atual: fatura inicial + compras já lançadas no cartão. */
   faturaAtual: number
+  /** Valor informado no cadastro; é o que o formulário edita. */
+  faturaInicial: number
   diaFechamento: number
   diaVencimento: number
 }

@@ -14,7 +14,8 @@ import type { Transacao } from '@/api/transacoes.api'
 import type { TipoTransacao } from '@/api/categorias.api'
 import { useTransacoesQuery } from '@/mixins/useTransacoes'
 import { iconeCategoria } from '@/utils/iconesCategoria'
-import { formatarDataGrupo } from '@/utils/formatters'
+import { dataIsoLocal, formatarDataGrupo } from '@/utils/formatters'
+import { statusPagamento } from '@/utils/statusPagamento'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,6 +25,8 @@ const mes = computed(() => mesReferencia.value.getMonth() + 1)
 const ano = computed(() => mesReferencia.value.getFullYear())
 
 const { data: transacoes } = useTransacoesQuery(mes, ano)
+
+const hojeIso = dataIsoLocal()
 
 const filtroTipo = ref<'Todas' | TipoTransacao>('Todas')
 const filtroCategoria = ref('')
@@ -134,6 +137,7 @@ function aoEditar(movimentacao: Transacao) {
             :valor="movimentacao.valor"
             :tipo="movimentacao.tipo"
             :cor="movimentacao.categoriaCor"
+            :status="statusPagamento(movimentacao, hojeIso)"
             @click="abrirDetalhes(movimentacao)"
           />
         </ul>

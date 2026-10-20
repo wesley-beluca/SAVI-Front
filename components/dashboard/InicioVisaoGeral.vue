@@ -5,18 +5,20 @@ import { Eye, EyeOff, ArrowUpRight, ArrowDownRight, ChevronRight } from '@lucide
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Progress } from '@/components/ui/progress'
 import { useAuthStore } from '@/store/auth.store'
-import { formatarMoeda } from '@/utils/formatters'
+import { dataIsoLocal, formatarMoeda } from '@/utils/formatters'
 import { iconeCategoria } from '@/utils/iconesCategoria'
+import { descreverVencimento } from '@/utils/statusPagamento'
 import { useTransacoesQuery } from '@/mixins/useTransacoes'
 import { useOrcamentoQuery } from '@/mixins/useOrcamento'
 import NavegadorMes from '@/components/transactions/NavegadorMes.vue'
 import ItemListaFinanceira from '@/components/transactions/ItemListaFinanceira.vue'
+import BotaoPagamento from '@/components/transactions/BotaoPagamento.vue'
 
 const authStore = useAuthStore()
 
 const saldoVisivel = ref(true)
 const dataReferencia = ref(new Date())
-const hoje = new Date()
+const hojeIso = dataIsoLocal()
 
 const mes = computed(() => dataReferencia.value.getMonth() + 1)
 const ano = computed(() => dataReferencia.value.getFullYear())
@@ -26,7 +28,12 @@ const { data: orcamento } = useOrcamentoQuery(mes, ano)
 
 const receitas = computed(() => somar(transacoes.value ?? [], 'Receita'))
 const despesas = computed(() => somar(transacoes.value ?? [], 'Despesa'))
-const saldoDisponivel = computed(() => receitas.value - despesas.value)
+// Só despesas marcadas como pagas saem do saldo; as demais aparecem como "a pagar".
+const despesasPagas = computed(() =>
+  somar((transacoes.value ?? []).filter((transacao) => transacao.pago), 'Despesa'),
+)
+const aPagar = computed(() => despesas.value - despesasPagas.value)
+const saldoDisponivel = computed(() => receitas.value - despesasPagas.value)
 
 const orcamentoTotal = computed(() => orcamento.value?.limitePlanejado ?? 0)
 const orcamentoGasto = computed(() => orcamento.value?.utilizado ?? despesas.value)
@@ -35,9 +42,10 @@ const percentualOrcamento = computed(() =>
 )
 const restanteOrcamento = computed(() => orcamentoTotal.value - orcamentoGasto.value)
 
+// Despesas do mês ainda não pagas, das mais antigas (vencidas) para as mais distantes.
 const proximasContas = computed(() =>
   (transacoes.value ?? [])
-    .filter((transacao) => transacao.tipo === 'Despesa' && new Date(`${transacao.data}T00:00:00`) >= hoje)
+    .filter((transacao) => transacao.tipo === 'Despesa' && !transacao.pago)
     .sort((a, b) => a.data.localeCompare(b.data))
     .slice(0, 5),
 )
@@ -96,11 +104,16 @@ const iniciais = computed(() => {
             <ArrowDownRight class="size-4" />
           </span>
           <div>
-            <p class="text-xs opacity-70">Despesas</p>
-            <p class="text-sm font-semibold">{{ formatarMoeda(despesas) }}</p>
+            <p class="text-xs opacity-70">Despesas pagas</p>
+            <p class="text-sm font-semibold">{{ formatarMoeda(despesasPagas) }}</p>
           </div>
         </div>
       </div>
+
+      <p v-if="aPagar > 0" class="mt-4 border-t border-current/10 pt-3 text-xs">
+        <span class="opacity-70">A pagar neste mês:</span>
+        <strong class="ml-1">{{ saldoVisivel ? formatarMoeda(aPagar) : 'R$ •••••' }}</strong>
+      </p>
     </div>
 
     <div class="rounded-2xl border p-4">
@@ -133,7 +146,7 @@ const iniciais = computed(() => {
       </div>
 
       <p v-if="proximasContas.length === 0" class="py-4 text-center text-sm text-muted-foreground">
-        Nenhuma conta a vencer neste período.
+        Nenhuma conta a pagar neste período.
       </p>
 
       <ul v-else class="flex flex-col gap-2">
@@ -142,10 +155,15 @@ const iniciais = computed(() => {
           :key="conta.id"
           :icone="iconeCategoria(conta.categoriaIcone)"
           :titulo="conta.descricao"
-          :legenda="conta.categoriaNome"
+          :legenda="`${conta.categoriaNome} · ${descreverVencimento(conta.data, hojeIso)}`"
+          :legenda-destaque="conta.data < hojeIso"
           :valor="conta.valor"
           :cor="conta.categoriaCor"
-        />
+        >
+          <template #acao>
+            <BotaoPagamento :transacao="conta" />
+          </template>
+        </ItemListaFinanceira>
       </ul>
     </div>
   </div>

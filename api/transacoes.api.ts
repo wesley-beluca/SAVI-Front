@@ -15,6 +15,10 @@ export interface Transacao {
   mesesRecorrencia: number
   /** Número da ocorrência (1-based) dentro da recorrência. */
   ocorrencia: number
+  /** Se esta ocorrência já foi paga (só despesas). Apenas despesas pagas descontam do saldo. */
+  pago: boolean
+  /** Data/hora (UTC) em que a ocorrência foi marcada como paga. */
+  pagoEm: string | null
   categoriaId: string
   categoriaNome: string
   categoriaIcone: string
@@ -31,6 +35,11 @@ export interface DadosTransacao {
   parcelas: number
   mesesRecorrencia: number
   categoriaId: string
+}
+
+export interface DadosNovaTransacao extends DadosTransacao {
+  /** Marca a primeira ocorrência da despesa como já paga. */
+  pago: boolean
 }
 
 export interface PontoEvolucaoMensal {
@@ -53,8 +62,24 @@ export const transacoesApi = {
     return data
   },
 
-  async criar(dados: DadosTransacao) {
+  /** Ocorrências de despesas não pagas com vencimento entre `de` e `ate` (YYYY-MM-DD, inclusivos). */
+  async listarPendentes(de: string, ate: string) {
+    const { data } = await httpClient.get<Transacao[]>('/api/transacoes/pendentes', { params: { de, ate } })
+    return data
+  },
+
+  async criar(dados: DadosNovaTransacao) {
     const { data } = await httpClient.post<Transacao>('/api/transacoes', dados)
+    return data
+  },
+
+  async marcarComoPaga(id: string, ocorrencia: number) {
+    const { data } = await httpClient.post<Transacao>(`/api/transacoes/${id}/ocorrencias/${ocorrencia}/pagamento`)
+    return data
+  },
+
+  async desmarcarPagamento(id: string, ocorrencia: number) {
+    const { data } = await httpClient.delete<Transacao>(`/api/transacoes/${id}/ocorrencias/${ocorrencia}/pagamento`)
     return data
   },
 

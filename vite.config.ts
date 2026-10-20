@@ -17,6 +17,8 @@ export default defineConfig({
       // Só cacheia o app-shell (JS/CSS/ícones) — dados da API sempre vêm da rede (sem modo offline no MVP).
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        // Trata o clique nas notificações de contas a pagar (ver mixins/useLembretesContas.ts).
+        importScripts: ['sw-lembretes.js'],
       },
       includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
