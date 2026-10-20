@@ -50,7 +50,7 @@ watch(aberto, (estaAberto) => {
 
   nome.value = props.cartao?.nome ?? ''
   banco.value = props.cartao?.banco ?? ''
-  faturaAtual.value = props.cartao ? String(props.cartao.faturaAtual) : ''
+  faturaAtual.value = props.cartao ? String(props.cartao.faturaInicial) : ''
   diaFechamento.value = props.cartao ? String(props.cartao.diaFechamento) : ''
   diaVencimento.value = props.cartao ? String(props.cartao.diaVencimento) : ''
 })
@@ -131,7 +131,7 @@ async function excluir() {
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <Label for="cartao-fatura">Fatura atual</Label>
+          <Label for="cartao-fatura">Fatura inicial</Label>
           <Input
             id="cartao-fatura"
             v-model="faturaAtual"

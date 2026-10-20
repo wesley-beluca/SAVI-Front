@@ -3,9 +3,12 @@ import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { Home, ArrowLeftRight, TrendingUp, Wallet, User, Plus } from '@lucide/vue'
 import { FloatingButton } from '@/components/ui/floating-button'
+import { useLembretesContas } from '@/mixins/useLembretesContas'
 import logoMark from '@/static/brand/logo-icon.png'
 
 const route = useRoute()
+
+useLembretesContas()
 
 const abas = [
   { nome: 'inicio', rotulo: 'Início', icone: Home },

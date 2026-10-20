@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { Pencil, Trash2 } from '@lucide/vue'
+import { computed } from 'vue'
+import { CircleCheck, Pencil, Trash2, Undo2 } from '@lucide/vue'
 import { toast } from 'vue-sonner'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import type { Transacao } from '@/api/transacoes.api'
-import { useRemoverTransacaoMutation } from '@/mixins/useTransacoes'
+import { useDefinirPagamentoMutation, useRemoverTransacaoMutation } from '@/mixins/useTransacoes'
 import { iconeCategoria } from '@/utils/iconesCategoria'
-import { formatarMoeda, formatarDataCompleta } from '@/utils/formatters'
+import { formatarMoeda, formatarDataCompleta, dataIsoLocal } from '@/utils/formatters'
+import { ESTILO_STATUS, statusPagamento } from '@/utils/statusPagamento'
 
 const props = defineProps<{
   movimentacao: Transacao | null
@@ -19,6 +21,29 @@ const emit = defineEmits<{
 }>()
 
 const removerMutation = useRemoverTransacaoMutation()
+const pagamentoMutation = useDefinirPagamentoMutation()
+
+const status = computed(() => (props.movimentacao ? statusPagamento(props.movimentacao) : null))
+
+const rotuloStatus = computed(() => {
+  const pagoEm = props.movimentacao?.pagoEm
+  if (status.value === 'paga' && pagoEm) return `Paga em ${formatarDataCompleta(dataIsoLocal(new Date(pagoEm)))}`
+  return status.value ? ESTILO_STATUS[status.value].rotulo : ''
+})
+
+async function alternarPagamento() {
+  if (!props.movimentacao) return
+
+  const pago = !props.movimentacao.pago
+
+  try {
+    await pagamentoMutation.mutateAsync({ transacao: props.movimentacao, pago })
+    toast.success(pago ? 'Despesa marcada como paga.' : 'Pagamento desmarcado.')
+    aberto.value = false
+  } catch {
+    toast.error('Não foi possível atualizar o pagamento. Tente novamente.')
+  }
+}
 
 function editar() {
   if (props.movimentacao) emit('editar', props.movimentacao)
@@ -65,6 +90,10 @@ async function excluir() {
           <dt class="text-muted-foreground">Data</dt>
           <dd class="font-medium">{{ formatarDataCompleta(movimentacao.data) }}</dd>
         </div>
+        <div v-if="status" class="flex items-center justify-between px-3 py-2.5">
+          <dt class="text-muted-foreground">Situação</dt>
+          <dd class="font-medium" :class="ESTILO_STATUS[status].texto">{{ rotuloStatus }}</dd>
+        </div>
         <div class="flex items-center justify-between px-3 py-2.5">
           <dt class="text-muted-foreground">Conta</dt>
           <dd class="font-medium">{{ movimentacao.conta }}</dd>
@@ -82,6 +111,17 @@ async function excluir() {
           }}</dd>
         </div>
       </dl>
+
+      <Button
+        v-if="status"
+        :variant="movimentacao.pago ? 'outline' : 'default'"
+        class="w-full"
+        :disabled="pagamentoMutation.isPending.value"
+        @click="alternarPagamento"
+      >
+        <component :is="movimentacao.pago ? Undo2 : CircleCheck" />
+        {{ movimentacao.pago ? 'Desmarcar pagamento' : 'Marcar como paga' }}
+      </Button>
 
       <div class="flex gap-2">
         <Button variant="outline" class="flex-1" @click="editar">

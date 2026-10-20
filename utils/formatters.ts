@@ -34,6 +34,20 @@ export function formatarDataCompleta(dataIso: string): string {
   return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(data)
 }
 
+/** Data no fuso local como YYYY-MM-DD. `toISOString()` usa UTC e, à noite no Brasil, já devolve o dia seguinte. */
+export function dataIsoLocal(data = new Date()): string {
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const dia = String(data.getDate()).padStart(2, '0')
+  return `${data.getFullYear()}-${mes}-${dia}`
+}
+
+/** Hoje deslocado em `dias` (negativo para o passado), no fuso local, como YYYY-MM-DD. */
+export function dataIsoDaquiA(dias: number): string {
+  const data = new Date()
+  data.setDate(data.getDate() + dias)
+  return dataIsoLocal(data)
+}
+
 function ehHoje(dataIso: string): boolean {
   const hoje = new Date()
   const data = new Date(`${dataIso}T00:00:00`)

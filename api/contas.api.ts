@@ -4,7 +4,10 @@ export interface Conta {
   id: string
   nome: string
   banco: string
+  /** Saldo atual: saldo inicial + receitas − despesas pagas. */
   saldo: number
+  /** Valor informado no cadastro; é o que o formulário edita. */
+  saldoInicial: number
 }
 
 export interface DadosConta {
