@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { formatarMoeda } from '@/utils/formatters'
+import { ESTILO_STATUS, type StatusPagamento } from '@/utils/statusPagamento'
 
 const props = defineProps<{
   icone: Component
@@ -10,6 +11,7 @@ const props = defineProps<{
   valor: number
   tipo?: 'Receita' | 'Despesa'
   cor?: string
+  status?: StatusPagamento | null
 }>()
 </script>
 
@@ -28,13 +30,19 @@ const props = defineProps<{
         {{ legenda }}
       </p>
     </div>
-    <p
-      class="text-sm font-semibold"
-      :class="{ 'text-success': props.tipo === 'Receita', 'text-destructive': props.tipo === 'Despesa' }"
-    >
-      <template v-if="props.tipo === 'Receita'">+</template>
-      <template v-else-if="props.tipo === 'Despesa'">-</template>
-      {{ formatarMoeda(valor) }}
-    </p>
+    <div class="flex flex-col items-end">
+      <p
+        class="text-sm font-semibold"
+        :class="{ 'text-success': props.tipo === 'Receita', 'text-destructive': props.tipo === 'Despesa' }"
+      >
+        <template v-if="props.tipo === 'Receita'">+</template>
+        <template v-else-if="props.tipo === 'Despesa'">-</template>
+        {{ formatarMoeda(valor) }}
+      </p>
+      <p v-if="status" class="text-xs font-medium" :class="ESTILO_STATUS[status].texto">
+        {{ ESTILO_STATUS[status].rotulo }}
+      </p>
+    </div>
+    <slot name="acao" />
   </li>
 </template>

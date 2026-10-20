@@ -68,7 +68,7 @@ export function gerarInsights(
   }
 
   const contasProximas = transacoesAtual.filter((transacao) => {
-    if (transacao.tipo !== 'Despesa') return false
+    if (transacao.tipo !== 'Despesa' || transacao.pago) return false
     const data = new Date(`${transacao.data}T00:00:00`)
     const diffDias = Math.round((data.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
     return diffDias >= 0 && diffDias <= 7

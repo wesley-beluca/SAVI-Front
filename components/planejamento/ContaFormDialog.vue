@@ -39,7 +39,7 @@ watch(aberto, (estaAberto) => {
   resetar()
   nome.value = props.conta?.nome ?? ''
   banco.value = props.conta?.banco ?? ''
-  saldo.value = props.conta ? String(props.conta.saldo) : ''
+  saldo.value = props.conta ? String(props.conta.saldoInicial) : ''
 })
 
 async function salvar() {
@@ -112,7 +112,7 @@ async function excluir() {
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <Label for="conta-saldo">Saldo atual</Label>
+          <Label for="conta-saldo">Saldo inicial</Label>
           <Input
             id="conta-saldo"
             v-model="saldo"

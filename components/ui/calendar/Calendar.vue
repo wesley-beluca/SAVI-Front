@@ -150,7 +150,10 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
               <CalendarCellTrigger
                 :day="weekDate"
                 :month="month.value"
-              />
+              >
+                <!-- Conteúdo customizado do dia (ex.: marcadores). Sem o slot, o reka-ui renderiza o número do dia. -->
+                <slot name="calendar-cell" :day="weekDate" :month="month.value" />
+              </CalendarCellTrigger>
             </CalendarCell>
           </CalendarGridRow>
         </CalendarGridBody>
